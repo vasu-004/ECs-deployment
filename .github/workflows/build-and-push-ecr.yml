@@ -1,4 +1,4 @@
-name: Build and Push HTML App to Private ECR
+name: Build and Push to Private ECR
 
 on:
   push:
@@ -9,15 +9,13 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      AWS_REGION: ${{ secrets.AWS_REGION }}             # e.g. us-east-1
-      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}     # 12-digit AWS account ID
-      ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}     # e.g. my-html-app
+      AWS_REGION: us-east-1
+      IMAGE_URI: 043573421163.dkr.ecr.us-east-1.amazonaws.com/dev-demo:latest
 
     steps:
     - name: Checkout source
       uses: actions/checkout@v3
 
-    # Configure AWS credentials
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -25,16 +23,13 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-    # Login to Amazon ECR
     - name: Login to Amazon ECR
       run: |
         aws ecr get-login-password --region $AWS_REGION \
-        | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+        | docker login --username AWS --password-stdin 043573421163.dkr.ecr.$AWS_REGION.amazonaws.com
 
-    # Build and Push Docker Image
     - name: Build and Push Docker image
       run: |
-        IMAGE_URI=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:latest
         echo "Building and pushing image: $IMAGE_URI"
         docker build -t $IMAGE_URI .
         docker push $IMAGE_URI
