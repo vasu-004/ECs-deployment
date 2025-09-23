@@ -1,35 +1,42 @@
-name: Build and Push to Private ECR
+name: Build and Push to ECR Public
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  build-and-push:
+  build-and-push-ecr-public:
     runs-on: ubuntu-latest
 
-    env:
-      AWS_REGION: us-east-1
-      IMAGE_URI: 043573421163.dkr.ecr.us-east-1.amazonaws.com/dev-demo:latest
-
     steps:
-    - name: Checkout source
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Login to Amazon ECR
-      run: |
-        aws ecr get-login-password --region $AWS_REGION \
-        | docker login --username AWS --password-stdin 043573421163.dkr.ecr.$AWS_REGION.amazonaws.com
+      - name: Login to Amazon ECR Public
+        uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registry-type: public
 
-    - name: Build and Push Docker image
-      run: |
-        echo "Building and pushing image: $IMAGE_URI"
-        docker build -t $IMAGE_URI .
-        docker push $IMAGE_URI
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push to ECR Public
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            public.ecr.aws/e0b3f6o5/my-html-app:latest
+            public.ecr.aws/e0b3f6o5/my-html-app:${{ github.sha }}
