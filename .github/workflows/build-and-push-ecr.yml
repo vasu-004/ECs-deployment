@@ -38,5 +38,5 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            public.ecr.aws/e0b3f6o5/my-html-app:latest
-            public.ecr.aws/e0b3f6o5/my-html-app:${{ github.sha }}
+            public.ecr.aws/e0b3f6o5/dev-react:latest
+            public.ecr.aws/e0b3f6o5/dev-react:${{ github.sha }}
